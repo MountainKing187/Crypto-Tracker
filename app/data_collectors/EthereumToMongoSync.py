@@ -1,56 +1,76 @@
-import os
-from time import sleep
+import time
 from web3 import Web3, LegacyWebSocketProvider
-from pymongo import MongoClient
-from dotenv import load_dotenv
+from app.utils import config_loader, mongo_handler
+from datetime import datetime
 
 class EthereumToMongoSync:
     def __init__(self):
-        load_dotenv()
-        api_key = os.getenv("ALCHEMY_API_KEY")
-        mongo_uri = os.getenv("MONGODB_URI")
-
-        if not api_key or not mongo_uri:
-            raise ValueError("Falta ALCHEMY_API_KEY o MONGODB_URI en el .env")
-
-        self.w3 = Web3(LegacyWebSocketProvider(f"wss://eth-mainnet.g.alchemy.com/v2/{api_key}"))
+        # Cargar configuración centralizada
+        self.config = config_loader.load_config()
+        
+        # Verificar que tenemos la clave de Alchemy
+        if not self.config.ALCHEMY_API_KEY:
+            raise ValueError("Falta ALCHEMY_API_KEY en la configuración")
+        
+        # Inicializar Web3 con WebSocket de Alchemy
+        ws_url = f"wss://eth-mainnet.g.alchemy.com/v2/{self.config.ALCHEMY_API_KEY}"
+        self.w3 = Web3(LegacyWebSocketProvider(ws_url))
         if not self.w3.is_connected():
             raise ConnectionError("No se pudo conectar a Ethereum WebSocket")
+        
+        # Inicializar MongoDB usando MongoHandler
+        self.mongo = mongo_handler.MongoHandler()
+        self.mongo.client = self.mongo.create_client(self.config.MONGODB_URI)
+        self.mongo.db = self.mongo.client[self.config.MONGO_DB_NAME]
+        
+        # Colecciones
+        self.blocks = self.mongo.db.blocks
+        self.transactions = self.mongo.db.transactions
 
-        self.mongo_client = MongoClient(mongo_uri)
-        self.db = self.mongo_client.ethereum
-        self.blocks = self.db.blocks
-        self.transactions = self.db.transactions
+        print("Conexión a Ethereum y MongoDB establecida.")
+        print(f"Base de datos: {self.config.MONGO_DB_NAME}")
 
     def save_block_and_transactions(self, block_number):
         block = self.w3.eth.get_block(block_number, full_transactions=True)
-    
+        
+        # Convertir timestamp a datetime UTC
+        block_timestamp = datetime.utcfromtimestamp(block.timestamp)
+        
         block_data = {
             "blockNumber": block.number,
             "hash": block.hash.hex(),
-            "timestamp": block.timestamp,
+            "timestamp": block_timestamp,
             "miner": block.miner,
             "transactions": [tx.hash.hex() for tx in block.transactions]
         }
-    
-        self.blocks.update_one({"blockNumber": block.number}, {"$set": block_data}, upsert=True)
-    
+        
+        # Actualizar o insertar el bloque
+        self.blocks.update_one(
+            {"blockNumber": block.number}, 
+            {"$set": block_data}, 
+            upsert=True
+        )
+        
+        # Guardar cada transacción
         for tx in block.transactions:
             value_eth = str(Web3.from_wei(tx.value, "ether"))
-    
+            
             tx_data = {
                 "hash": tx.hash.hex(),
                 "blockNumber": block.number,
-                "from": tx["from"],
+                "from": tx.get("from", ""),  # Usamos get por si acaso no existe
                 "to": tx.to,
                 "value": value_eth,
                 "asset": "ETH",
-                "timestamp": block.timestamp
+                "timestamp": block_timestamp
             }
-            self.transactions.update_one({"hash": tx.hash.hex()}, {"$set": tx_data}, upsert=True)
-    
+            self.transactions.update_one(
+                {"hash": tx.hash.hex()}, 
+                {"$set": tx_data}, 
+                upsert=True
+            )
+        
         print(f"Guardado bloque {block.number} con {len(block.transactions)} transacciones.")
-
 
     def run(self):
         print("Escuchando nuevos bloques...")
@@ -63,12 +83,12 @@ class EthereumToMongoSync:
                     block = self.w3.eth.get_block(block_hash.hex())
                     self.save_block_and_transactions(block.number)
 
-                sleep(5)
+                time.sleep(5)
 
             except Exception as e:
                 print(f"Error: {e}")
-                sleep(10)
+                time.sleep(10)
 
 if __name__ == "__main__":
-    eth_to_mongo = EthereumToMongoSync()
-    eth_to_mongo.run()
+    sync = EthereumToMongoSync()
+    sync.run()

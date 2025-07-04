@@ -4,7 +4,11 @@ class MongoHandler:
     def __init__(self):
         self.client = None
         self.db = None
-    
+
+    def create_client(self, mongo_uri):
+        """Crea y devuelve una instancia de cliente MongoDB"""
+        return MongoClient(mongo_uri)    
+
     def init_app(self, app):
         self.client = MongoClient(app.config['MONGODB_URI'])
         self.db = self.client[app.config['MONGO_DB_NAME']]

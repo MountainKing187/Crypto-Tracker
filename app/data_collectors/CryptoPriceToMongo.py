@@ -1,24 +1,25 @@
-import os
 import time
 import requests
-from pymongo import MongoClient
 from datetime import datetime, timezone
-from dotenv import load_dotenv
+from app.utils import config_loader, mongo_handler
 
-class CryptoPriceToMongoNoKey:
+class CryptoPriceToMongo:
     def __init__(self, symbols):
-        load_dotenv()
-        mongo_uri = os.getenv("MONGODB_URI")
-        if not mongo_uri:
-            raise ValueError("FALTA MONGODB_URI en el archivo .env")
+        # Cargar configuración desde el config_loader centralizado
+        self.config = config_loader.load_config()
+        
+        # Obtener instancia de MongoHandler
+        self.mongo = mongo_handler.MongoHandler()
+        
+        # Configurar MongoDB
+        self.mongo.client = self.mongo.create_client(self.config.MONGODB_URI)
+        self.mongo.db = self.mongo.client[self.config.MONGO_DB_NAME]
+        self.prices = self.mongo.db['price_history']
 
         self.symbols = symbols
         self.api_url = "https://api.coingecko.com/api/v3/simple/price"
-        self.client = MongoClient(mongo_uri)
-        self.db = self.client.crypto
-        self.prices = self.db.prices
 
-        print(f"Conexión MongoDB establecida.")
+        print(f"Conexión MongoDB establecida. DB: {self.config.MONGO_DB_NAME}")
         print(f"Criptos configuradas: {', '.join(self.symbols)}")
 
     def get_prices(self, currency="usd"):
@@ -65,8 +66,3 @@ class CryptoPriceToMongoNoKey:
         while True:
             self.save_prices()
             time.sleep(interval_seconds)
-
-if __name__ == "__main__":
-    symbols = ["bitcoin", "ethereum", "dogecoin"]
-    app = CryptoPriceToMongoNoKey(symbols)
-    app.run(interval_seconds=60)
