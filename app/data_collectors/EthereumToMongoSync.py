@@ -1,4 +1,5 @@
 import time
+from app import socketio
 from web3 import Web3, LegacyWebSocketProvider
 from app.utils import config_loader, mongo_handler
 from datetime import datetime
@@ -50,6 +51,9 @@ class EthereumToMongoSync:
             {"$set": block_data}, 
             upsert=True
         )
+
+        block_data['timestamp'] = block_timestamp.isoformat()
+        socketio.emit('new_block', block_data)
         
         # Guardar cada transacción
         for tx in block.transactions:

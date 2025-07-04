@@ -1,5 +1,6 @@
 import time
 import requests
+from app import socketio
 from datetime import datetime, timezone
 from app.utils import config_loader, mongo_handler
 
@@ -54,6 +55,11 @@ class CryptoPriceToMongo:
                         "source": "CoinGecko"
                     }
                     self.prices.insert_one(record)
+                    socketio.emit('new_price', {
+                        'symbol': symbol,
+                        'price': price,
+                        'timestamp': now.isoformat()
+                    })
                     print(f"Guardado: {symbol} -> ${price}")
                 else:
                     print(f"Precio USD no encontrado para: {symbol}")

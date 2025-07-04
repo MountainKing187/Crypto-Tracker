@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, jsonify
 from app import mongo
 import json
 from bson import json_util
+from flask_socketio import emit
+from app import socketio
 
 main_bp = Blueprint('main', __name__)
 
@@ -26,3 +28,7 @@ def block_transactions(block_number):
     collection = mongo.get_collection('transactions')
     data = collection.find({'blockNumber': int(block_number)})
     return json.loads(json_util.dumps(data))
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
