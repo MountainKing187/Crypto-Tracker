@@ -1,17 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
     const socket = io();
     
-    // Configuración de gráficos por moneda
-    const cryptoCharts = {
-        ethereum: initChart('ethChart', 'Ethereum (ETH)', 'rgb(75, 192, 192)'),
-        dogecoin: initChart('dogeChart', 'Dogecoin (DOGE)', 'rgb(153, 102, 255)'),
-        bitcoin: initChart('btcChart', 'Bitcoin (BTC)', 'rgb(255, 159, 64)')
-    };
-    
+    // Elementos DOM
+    const chartCanvas = document.getElementById('cryptoChart');
     const blocksList = document.getElementById('blocks-list');
     const transactionsContainer = document.getElementById('transactions-container');
-
+    const currencyButtons = document.querySelectorAll('.currency-btn');
+    const timeButtons = document.querySelectorAll('.time-btn');
+    
+    // Variables de estado
     let currentBlock = null;
+    let currentCurrency = 'ethereum';
+    let timeRange = 24;
+    let cryptoChart = null;
 
     // Función para formatear direcciones
     function formatAddress(address) {
@@ -19,112 +20,140 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
     }
 
-    // Inicializar un gráfico
-    function initChart(canvasId, label, borderColor) {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        return {
-            chart: new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: label,
-                        data: [],
-                        borderColor: borderColor,
-                        backgroundColor: borderColor.replace('rgb', 'rgba').replace(')', ', 0.1)'),
-                        borderWidth: 2,
-                        tension: 0.1,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            grid: { color: 'rgba(200, 200, 200, 0.1)' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { maxTicksLimit: 8 }
+    // Inicializar y actualizar el gráfico
+    function updateChart(data) {
+        // Destruir el gráfico anterior si existe
+        if (cryptoChart) {
+            cryptoChart.destroy();
+        }
+        
+        // Calcular timestamp de hace X horas
+        const hoursAgo = Date.now() - (timeRange * 60 * 60 * 1000);
+        
+        // Filtrar y procesar datos
+        const labels = [];
+        const prices = [];
+        const colors = {
+            ethereum: 'rgb(75, 192, 192)',
+            dogecoin: 'rgb(153, 102, 255)',
+            bitcoin: 'rgb(255, 159, 64)'
+        };
+        const color = colors[currentCurrency] || 'rgb(75, 192, 192)';
+        
+        data
+            .filter(item => item.symbol === currentCurrency)
+            .sort((a, b) => {
+                const dateA = a.timestamp.$date ? new Date(a.timestamp.$date) : new Date(a.timestamp);
+                const dateB = b.timestamp.$date ? new Date(b.timestamp.$date) : new Date(b.timestamp);
+                return dateA - dateB;
+            })
+            .forEach(item => {
+                const dateObj = item.timestamp.$date ? 
+                    new Date(item.timestamp.$date) : 
+                    new Date(item.timestamp);
+                
+                if (dateObj.getTime() >= hoursAgo) {
+                    const hours = dateObj.getHours().toString().padStart(2, '0');
+                    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                    labels.push(`${hours}:${minutes}`);
+                    prices.push(item.price);
+                }
+            });
+        
+        // Crear nuevo gráfico
+        const ctx = chartCanvas.getContext('2d');
+        cryptoChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: currentCurrency.toUpperCase(),
+                    data: prices,
+                    borderColor: color,
+                    backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                    borderWidth: 2,
+                    tension: 0.1,
+                    fill: true,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: color,
+                    pointBorderWidth: 1,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: { color: 'rgba(200, 200, 200, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Precio (USD)'
                         }
                     },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return `$${context.parsed.y.toFixed(2)}`;
-                                }
+                    x: {
+                        grid: { display: false },
+                        ticks: { maxTicksLimit: 8 },
+                        title: {
+                            display: true,
+                            text: `Últimas ${timeRange} horas`
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `$${context.parsed.y.toFixed(2)}`;
                             }
                         }
-                    },
-                    interaction: { intersect: false, mode: 'nearest' }
+                    }
+                },
+                interaction: { 
+                    intersect: false, 
+                    mode: 'nearest',
+                    axis: 'x'
                 }
-            }),
-            data: {
-                labels: [],
-                prices: []
             }
-        };
+        });
     }
     
-    // Actualizar un gráfico específico
-    function updateChart(currency, newData) {
-        const chartConfig = cryptoCharts[currency];
-        if (!chartConfig) return;
-        
-        // Filtrar y validar datos
-        const validData = newData.filter(item => {
-            return item.symbol === currency &&
-                   typeof item.price === 'number' && 
-                   item.price > 0 &&
-                   item.timestamp;
-        });
-        
-        if (validData.length === 0) return;
-        
-        // Ordenar por timestamp (más antiguo primero)
-        validData.sort((a, b) => {
-            const dateA = a.timestamp.$date ? new Date(a.timestamp.$date) : new Date(a.timestamp);
-            const dateB = b.timestamp.$date ? new Date(b.timestamp.$date) : new Date(b.timestamp);
-            return dateA - dateB;
-        });
-        
-        // Procesar nuevos datos
-        validData.forEach(item => {
-            const dateObj = item.timestamp.$date ? 
-                new Date(item.timestamp.$date) : 
-                new Date(item.timestamp);
-                
-            const label = dateObj.toLocaleTimeString();
-            const price = item.price;
-            
-            // Solo añadir si es un nuevo dato o precio diferente
-            const lastPrice = chartConfig.data.prices.length > 0 
-                ? chartConfig.data.prices[chartConfig.data.prices.length - 1] 
-                : null;
-                
-            if (chartConfig.data.prices.length === 0 || price !== lastPrice) {
-                chartConfig.data.labels.push(label);
-                chartConfig.data.prices.push(price);
-                
-                // Mantener solo los últimos 100 puntos
-                if (chartConfig.data.labels.length > 100) {
-                    chartConfig.data.labels.shift();
-                    chartConfig.data.prices.shift();
-                }
-            }
-        });
-        
-        // Actualizar el gráfico
-        chartConfig.chart.data.labels = chartConfig.data.labels;
-        chartConfig.chart.data.datasets[0].data = chartConfig.data.prices;
-        chartConfig.chart.update();
+    // Cargar datos para la moneda actual
+    function loadCurrencyData() {
+        fetch(`/api/price/${currentCurrency}?hours=${timeRange}`)
+            .then(response => response.json())
+            .then(data => {
+                updateChart(data);
+            })
+            .catch(error => {
+                console.error('Error loading currency data:', error);
+            });
     }
+
+    // Cambiar moneda al hacer clic en botón
+    currencyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            currencyButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            currentCurrency = this.dataset.currency;
+            loadCurrencyData();
+        });
+    });
+    
+    // Cambiar rango de tiempo
+    timeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            timeButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            timeRange = parseInt(this.dataset.hours);
+            loadCurrencyData();
+        });
+    });
 
     // Actualizar lista de bloques
     function updateRecentBlocksList(blocks) {
@@ -168,6 +197,9 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(transactions => {
                 renderTransactions(transactions);
+            })
+            .catch(error => {
+                console.error('Error loading transactions:', error);
             });
     }
     
@@ -211,31 +243,29 @@ document.addEventListener('DOMContentLoaded', function() {
         transactionsContainer.appendChild(table);
     }
 
-    // Eventos de SocketIO para cada moneda
-    socket.on('new_price_ethereum', (data) => {
-        if (data.symbol === 'ethereum') {
-            updateChart('ethereum', [data]);
+    // Manejar nuevos precios
+    function handleNewPrice(data) {
+        // Solo procesar si es para la moneda actual
+        if (data.symbol === currentCurrency) {
+            // Recargar todos los datos
+            loadCurrencyData();
         }
-    });
+    }
     
-    socket.on('new_price_dogecoin', (data) => {
-        if (data.symbol === 'dogecoin') {
-            updateChart('dogecoin', [data]);
-        }
-    });
-    
-    socket.on('new_price_bitcoin', (data) => {
-        if (data.symbol === 'bitcoin') {
-            updateChart('bitcoin', [data]);
-        }
-    });
+    // Registrar eventos de precios
+    socket.on('new_price_ethereum', handleNewPrice);
+    socket.on('new_price_dogecoin', handleNewPrice);
+    socket.on('new_price_bitcoin', handleNewPrice);
     
     // Manejar eventos de SocketIO para bloques
     socket.on('new_block', (block) => {
         // Actualizar lista de bloques
         fetch('/api/blocks/recent')
             .then(response => response.json())
-            .then(data => updateRecentBlocksList(data));
+            .then(data => updateRecentBlocksList(data))
+            .catch(error => {
+                console.error('Error updating blocks:', error);
+            });
         
         // Si es el bloque seleccionado, actualizar transacciones
         if (currentBlock === block.blockNumber) {
@@ -243,30 +273,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Cargar datos iniciales para cada moneda
+    // Cargar datos iniciales
     function loadInitialData() {
-        // Ethereum
-        fetch('/api/price/ethereum')
-            .then(response => response.json())
-            .then(data => {
-                updateChart('ethereum', data.reverse());
-            });
+        // Activar botón de Ethereum por defecto
+        document.querySelector('.currency-btn[data-currency="ethereum"]').classList.add('active');
         
-        // Dogecoin
-        fetch('/api/price/dogecoin')
-            .then(response => response.json())
-            .then(data => {
-                updateChart('dogecoin', data.reverse());
-            });
+        // Activar botón de 24h por defecto
+        document.querySelector('.time-btn[data-hours="24"]').classList.add('active');
         
-        // Bitcoin
-        fetch('/api/price/bitcoin')
-            .then(response => response.json())
-            .then(data => {
-                updateChart('bitcoin', data.reverse());
-            });
+        // Cargar datos iniciales del gráfico
+        loadCurrencyData();
         
-        // Bloques recientes
+        // Cargar bloques recientes
         fetch('/api/blocks/recent')
             .then(response => response.json())
             .then(data => {
@@ -275,6 +293,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     currentBlock = data[0].blockNumber;
                     loadBlockTransactions(currentBlock);
                 }
+            })
+            .catch(error => {
+                console.error('Error loading recent blocks:', error);
             });
     }
     

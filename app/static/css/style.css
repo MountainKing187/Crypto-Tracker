@@ -39,14 +39,41 @@ h1 {
     margin-bottom: 30px;
 }
 
+.currency-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.currency-btn {
+    background: #1e293b;
+    color: #e2e8f0;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+
+.currency-btn:hover {
+    background: #334155;
+}
+
+.currency-btn.active {
+    background: #38bdf8;
+    color: #0f172a;
+}
+
 .chart-container {
+    height: 400px;
     background: #1e293b;
     border-radius: 10px;
     padding: 20px;
+    margin-bottom: 30px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    height: 400px;
 }
-
 .chart-container h2 {
     margin-top: 0;
     color: #38bdf8;
@@ -85,7 +112,6 @@ h1 {
 .block-item.active {
     background: #2563eb;
 }
-
 .block-item:hover:not(.active) {
     background: #475569;
 }
@@ -124,7 +150,6 @@ h1 {
     width: 100%;
     border-collapse: collapse;
 }
-
 .transactions-table th {
     text-align: left;
     padding: 10px 15px;
@@ -146,3 +171,30 @@ h1 {
     text-align: right;
     font-family: monospace;
 }
+.time-range-selector {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    gap: 8px;
+}
+
+.time-btn {
+    background: #1e293b;
+    color: #e2e8f0;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 0.9em;
+}
+
+.time-btn:hover {
+    background: #334155;
+}
+
+.time-btn.active {
+    background: #38bdf8;
+    color: #0f172a;
+}
+
