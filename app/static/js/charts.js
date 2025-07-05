@@ -117,7 +117,8 @@ document.addEventListener('DOMContentLoaded', function() {
         chartConfig.chart.update();
     }
 
-    // Actualizar lista de bloques
+    }
+    // 5. Actualizar lista de bloques
     function updateRecentBlocksList(blocks) {
         blocksList.innerHTML = '';
 
@@ -144,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Cargar transacciones de un bloque
+    // 6. Cargar transacciones de un bloque
     function loadBlockTransactions(blockNumber) {
         // Resaltar bloque seleccionado
         document.querySelectorAll('.block-item').forEach(item => {
@@ -159,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Renderizar transacciones
+    // 7. Renderizar transacciones
     function renderTransactions(transactions) {
         transactionsContainer.innerHTML = '';
 
@@ -184,11 +185,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const tbody = table.querySelector('tbody');
 
-
-
-
-
-
         transactions.forEach(tx => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -198,18 +194,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="tx-value">${parseFloat(tx.value).toFixed(4)}</td>
             `;
             tbody.appendChild(row);
-
-
-
-
-
-
-
-
-
-
-
-
         });
 
         transactionsContainer.appendChild(table);
@@ -266,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     loadBlockTransactions(currentBlock);
                 }
             });
-    }
     
     // Inicializar la aplicación
     loadInitialData();
