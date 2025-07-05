@@ -188,8 +188,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 8. Manejar eventos de SocketIO
-    socket.on('new_price', (data) => {
-        updatePriceChart([data]);
+    socket.on('new_price_ethereum', (data) => {
+        if (data.symbol === 'ethereum') {
+            updatePriceChart([data]);
+        }
     });
     
     socket.on('new_block', (block) => {
