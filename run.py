@@ -1,16 +1,26 @@
 from app import create_app
-from app.data_collectors import crypto_price_to_mongo, ethereum_to_mongo_sync
+from app.data_collectors.CryptoPriceToMongo import CryptoPriceToMongo
+from app.data_collectors.EthereumToMongoSync import EthereumToMongoSync
 import threading
 
 app = create_app()
 
 def run_data_collectors():
-    # Iniciar recolectores en hilos separados
     symbols = ["bitcoin", "ethereum", "dogecoin"]
-    crypto_collector = CryptoPriceToMongo(symbols)
     
-    crypto_thread = threading.Thread(target=crypto_collector.run, kwargs={'interval_seconds': 60})
-    eth_thread = threading.Thread(target=ethereum_to_mongo_sync.run)
+    # Instanciar ambos recolectores
+    crypto_collector = CryptoPriceToMongo(symbols)
+    eth_sync = EthereumToMongoSync()  # Instancia creada aquí
+    
+    # Iniciar recolectores en hilos separados
+    crypto_thread = threading.Thread(
+        target=crypto_collector.run,
+        kwargs={'interval_seconds': 60}
+    )
+    
+    eth_thread = threading.Thread(
+        target=eth_sync.run  # Usamos la instancia creada
+    )
     
     crypto_thread.daemon = True
     eth_thread.daemon = True
