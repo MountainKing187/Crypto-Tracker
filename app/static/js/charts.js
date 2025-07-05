@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
         bitcoin: initChart('btcChart', 'Bitcoin (BTC)', 'rgb(255, 159, 64)')
     };
     
+    const blocksList = document.getElementById('blocks-list');
+    const transactionsContainer = document.getElementById('transactions-container');
+
+    let currentBlock = null;
+
     // Inicializar un gráfico
     function initChart(canvasId, label, borderColor) {
         const ctx = document.getElementById(canvasId).getContext('2d');
@@ -111,6 +116,103 @@ document.addEventListener('DOMContentLoaded', function() {
         chartConfig.chart.data.datasets[0].data = chartConfig.data.prices;
         chartConfig.chart.update();
     }
+
+    // Actualizar lista de bloques
+    function updateRecentBlocksList(blocks) {
+        blocksList.innerHTML = '';
+
+
+        blocks.forEach(block => {
+            const blockDate = new Date(block.timestamp.$date);
+            const listItem = document.createElement('li');
+            listItem.className = 'block-item';
+            listItem.dataset.blockNumber = block.blockNumber;
+            listItem.innerHTML = `
+                <div class="block-header">
+                    <span class="block-number">#${block.blockNumber}</span>
+                    <span class="block-time">${blockDate.toLocaleTimeString()}</span>
+                </div>
+                <div class="block-hash">${formatAddress(block.hash)}</div>
+                <div class="block-transactions">${block.transactions.length} transacciones</div>
+            `;
+            
+            listItem.addEventListener('click', function() {
+                loadBlockTransactions(block.blockNumber);
+            });
+            
+            blocksList.appendChild(listItem);
+        });
+    }
+    
+    // Cargar transacciones de un bloque
+    function loadBlockTransactions(blockNumber) {
+        // Resaltar bloque seleccionado
+        document.querySelectorAll('.block-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`.block-item[data-block-number="${blockNumber}"]`).classList.add('active');
+        
+        fetch(`/api/transactions/${blockNumber}`)
+            .then(response => response.json())
+            .then(transactions => {
+                renderTransactions(transactions);
+            });
+    }
+    
+    // Renderizar transacciones
+    function renderTransactions(transactions) {
+        transactionsContainer.innerHTML = '';
+
+        if (transactions.length === 0) {
+            transactionsContainer.innerHTML = '<p>No hay transacciones en este bloque</p>';
+            return;
+        }
+        
+        const table = document.createElement('table');
+        table.className = 'transactions-table';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Hash</th>
+                    <th>De</th>
+                    <th>A</th>
+                    <th>Valor (ETH)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+
+        const tbody = table.querySelector('tbody');
+
+
+
+
+
+
+        transactions.forEach(tx => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="tx-hash">${formatAddress(tx.hash)}</td>
+                <td class="tx-from">${tx.from ? formatAddress(tx.from) : 'SYSTEM'}</td>
+                <td class="tx-to">${tx.to ? formatAddress(tx.to) : 'CONTRACT'}</td>
+                <td class="tx-value">${parseFloat(tx.value).toFixed(4)}</td>
+            `;
+            tbody.appendChild(row);
+
+
+
+
+
+
+
+
+
+
+
+
+        });
+
+        transactionsContainer.appendChild(table);
     
     // Eventos de SocketIO para cada moneda
     socket.on('new_price_ethereum', (data) => {
@@ -167,6 +269,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Inicializar la aplicación
-    priceChart = initPriceChart();
     loadInitialData();
 });
