@@ -55,11 +55,27 @@ class CryptoPriceToMongo:
                         "source": "CoinGecko"
                     }
                     self.prices.insert_one(record)
-                    socketio.emit('new_price', {
-                        'symbol': symbol,
-                        'price': price,
-                        'timestamp': now.isoformat()
-                    })
+                    try:
+                        if symbol == 'ethereum':
+                            socketio.emit('new_price_ethereum', {
+                                'symbol': symbol,
+                                'price': price,
+                                'timestamp': now.isoformat()
+                            })
+                        elif symbol == 'dogecoin':
+                            socketio.emit('new_price_dogecoin', {
+                                'symbol': symbol,
+                                'price': price,
+                                'timestamp': now.isoformat()
+                            })
+                        elif symbol == 'bitcoin':
+                            socketio.emit('new_price_bitcoin', {
+                                'symbol': symbol,
+                                'price': price,
+                                'timestamp': now.isoformat()
+                            })
+                    except Exception as e:
+                        print(f"Error emitiendo evento para {symbol}: {str(e)}")
                     print(f"Guardado: {symbol} -> ${price}")
                 else:
                     print(f"Precio USD no encontrado para: {symbol}")
