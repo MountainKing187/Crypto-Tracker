@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentBlock = null;
 
+    // Función para formatear direcciones
+    function formatAddress(address) {
+        if (!address) return '';
+        return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    }
+
     // Inicializar un gráfico
     function initChart(canvasId, label, borderColor) {
         const ctx = document.getElementById(canvasId).getContext('2d');
@@ -98,7 +104,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const price = item.price;
             
             // Solo añadir si es un nuevo dato o precio diferente
-            const lastPrice = chartConfig.data.prices[chartConfig.data.prices.length - 1];
+            const lastPrice = chartConfig.data.prices.length > 0 
+                ? chartConfig.data.prices[chartConfig.data.prices.length - 1] 
+                : null;
+                
             if (chartConfig.data.prices.length === 0 || price !== lastPrice) {
                 chartConfig.data.labels.push(label);
                 chartConfig.data.prices.push(price);
@@ -117,11 +126,10 @@ document.addEventListener('DOMContentLoaded', function() {
         chartConfig.chart.update();
     }
 
-    }
-    // 5. Actualizar lista de bloques
+    // Actualizar lista de bloques
     function updateRecentBlocksList(blocks) {
+        if (!blocksList) return;
         blocksList.innerHTML = '';
-
 
         blocks.forEach(block => {
             const blockDate = new Date(block.timestamp.$date);
@@ -145,13 +153,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 6. Cargar transacciones de un bloque
+    // Cargar transacciones de un bloque
     function loadBlockTransactions(blockNumber) {
         // Resaltar bloque seleccionado
         document.querySelectorAll('.block-item').forEach(item => {
             item.classList.remove('active');
         });
-        document.querySelector(`.block-item[data-block-number="${blockNumber}"]`).classList.add('active');
+        const selectedBlock = document.querySelector(`.block-item[data-block-number="${blockNumber}"]`);
+        if (selectedBlock) {
+            selectedBlock.classList.add('active');
+        }
         
         fetch(`/api/transactions/${blockNumber}`)
             .then(response => response.json())
@@ -160,8 +171,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // 7. Renderizar transacciones
+    // Renderizar transacciones
     function renderTransactions(transactions) {
+        if (!transactionsContainer) return;
         transactionsContainer.innerHTML = '';
 
         if (transactions.length === 0) {
@@ -197,7 +209,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         transactionsContainer.appendChild(table);
-    
+    }
+
     // Eventos de SocketIO para cada moneda
     socket.on('new_price_ethereum', (data) => {
         if (data.symbol === 'ethereum') {
@@ -214,6 +227,19 @@ document.addEventListener('DOMContentLoaded', function() {
     socket.on('new_price_bitcoin', (data) => {
         if (data.symbol === 'bitcoin') {
             updateChart('bitcoin', [data]);
+        }
+    });
+    
+    // Manejar eventos de SocketIO para bloques
+    socket.on('new_block', (block) => {
+        // Actualizar lista de bloques
+        fetch('/api/blocks/recent')
+            .then(response => response.json())
+            .then(data => updateRecentBlocksList(data));
+        
+        // Si es el bloque seleccionado, actualizar transacciones
+        if (currentBlock === block.blockNumber) {
+            loadBlockTransactions(block.blockNumber);
         }
     });
     
@@ -250,6 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     loadBlockTransactions(currentBlock);
                 }
             });
+    }
     
     // Inicializar la aplicación
     loadInitialData();
