@@ -22,8 +22,7 @@ Gráficos interactivos de precios en tiempo real
 
 Y a futuro se implentara la funcionalidad de un asistene IA
 
-### Instalación y Uso
-Requisitos Previos
+### Requisitos Previos
 * Python 3.8+
 * MongoDB
 * API key de CoinGecko y Alchemy
