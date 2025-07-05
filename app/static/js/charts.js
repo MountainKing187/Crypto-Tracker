@@ -189,11 +189,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 8. Manejar eventos de SocketIO
     socket.on('new_price_ethereum', (data) => {
-        if (data.symbol === 'ethereum') {
-            updatePriceChart([data]);
-        }
-    });
+        console.log('Nuevo precio recibido:', data);
+        
+        // Convertir a formato compatible con MongoDB
+        const formattedData = {
+            symbol: data.symbol,
+            price: data.price,
+            timestamp: {
+                $date: data.timestamp
+            }
+        };
     
+        updatePriceChart([formattedData]);
+    });
     socket.on('new_block', (block) => {
         // Actualizar lista de bloques
         fetch('/api/blocks/recent')
