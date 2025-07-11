@@ -9,6 +9,12 @@ class NotificationService:
         # Cargar configuración centralizada
         self.config = config_loader.load_config()
         
+        # Configurar Firebase
+        self.firebase_cred = credentials.Certificate(firebase_cred_path)
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(self.firebase_cred)
+
+
         # Inicializar MongoDB usando MongoHandler
         self.mongo = mongo_handler.MongoHandler()
         self.mongo.client = self.mongo.create_client(self.config.MONGODB_URI)
@@ -21,10 +27,10 @@ class NotificationService:
         """Obtiene todos los tokens FCM registrados en MongoDB"""
         try:
             tokens = [doc['token'] for doc in self.devices_collection.find({}, {'token': 1})]
-            self.logger.info(f"Obtenidos {len(tokens)} tokens de dispositivos")
+            print(f"Obtenidos {len(tokens)} tokens de dispositivos")
             return tokens
         except Exception as e:
-            self.logger.error(f"Error al obtener tokens: {str(e)}")
+            print(f"Error al obtener tokens: {str(e)}")
             return []
 
     def send_notification_to_all(self, title, body):
@@ -36,7 +42,7 @@ class NotificationService:
         """
         tokens = self.get_device_tokens()
         if not tokens:
-            self.logger.warning("No hay tokens disponibles para enviar notificaciones")
+            print("No hay tokens disponibles para enviar notificaciones")
             return
         
         try:
@@ -51,14 +57,14 @@ class NotificationService:
             
             # Enviar y procesar respuesta
             response = messaging.send_multicast(message)
-            self.logger.info(f"Notificación enviada. Éxitos: {response.success_count}, Fallos: {response.failure_count}")
+            print(f"Notificación enviada. Éxitos: {response.success_count}, Fallos: {response.failure_count}")
             
             # Manejar tokens inválidos
             if response.failure_count > 0:
                 self.handle_failed_tokens(response.responses, tokens)
                 
         except Exception as e:
-            self.logger.error(f"Error al enviar notificación: {str(e)}")
+            print(f"Error al enviar notificación: {str(e)}")
 
     def handle_failed_tokens(self, responses, tokens):
         """Elimina tokens inválidos de la base de datos"""
@@ -66,11 +72,11 @@ class NotificationService:
         for i, resp in enumerate(responses):
             if not resp.success:
                 invalid_tokens.append(tokens[i])
-                self.logger.warning(f"Token inválido detectado: {tokens[i]} - {resp.exception}")
+                print(f"Token inválido detectado: {tokens[i]} - {resp.exception}")
         
         if invalid_tokens:
             try:
                 result = self.devices_collection.delete_many({'token': {'$in': invalid_tokens}})
-                self.logger.info(f"Tokens inválidos eliminados: {result.deleted_count}")
+                print(f"Tokens inválidos eliminados: {result.deleted_count}")
             except Exception as e:
-                self.logger.error(f"Error al eliminar tokens inválidos: {str(e)}")
+                print(f"Error al eliminar tokens inválidos: {str(e)}")

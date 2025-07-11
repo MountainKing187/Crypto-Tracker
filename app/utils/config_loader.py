@@ -10,6 +10,7 @@ def load_config():
         ALCHEMY_API_KEY = os.getenv('ALCHEMY_API_KEY')
         GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
         SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'supersecretkey')
+        FIREBASE_CRED_PATH = os.getenv('FIREBASE_CRED_PATH')
         
         @property
         def ETHEREUM_NODE_WS(self):

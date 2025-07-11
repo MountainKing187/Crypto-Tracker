@@ -12,6 +12,7 @@ def run_data_collectors():
     # Instanciar ambos recolectores
     crypto_collector = CryptoPriceToMongo(symbols)
     eth_sync = EthereumToMongoSync()
+    an_han = AnalisisHandler()
     
     
     # Iniciar recolectores en hilos separados
@@ -21,14 +22,21 @@ def run_data_collectors():
     )
     
     eth_thread = threading.Thread(
-        target=eth_sync.run  # Usamos la instancia creada
+        target=eth_sync.run
+    )
+
+    an_thread = threading.Thread(
+        target=an_han.run 
     )
     
     crypto_thread.daemon = True
     eth_thread.daemon = True
-    
+    an_thread.daemon = True
+
+        
     crypto_thread.start()
     eth_thread.start()
+    an_thread.start()
 
 if __name__ == '__main__':
     run_data_collectors()
