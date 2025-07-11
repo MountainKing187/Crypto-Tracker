@@ -39,7 +39,7 @@ class GeminiAgent:
                 "timestamp": {"gte": hace_una_hora}
             }
 
-            registros = self.price_history.find(query)
+            registros = list(self.price_history.find(query))
 
             # Preparar datos para el prompt conjunto
             resumen_monedas = []
