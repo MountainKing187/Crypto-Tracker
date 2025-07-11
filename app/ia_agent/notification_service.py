@@ -10,7 +10,7 @@ class NotificationService:
         self.config = config_loader.load_config()
         
         # Configurar Firebase
-        self.firebase_cred = credentials.Certificate(firebase_cred_path)
+        self.firebase_cred = credentials.Certificate(self.config.FIREBASE_CRED_PATH)
         if not firebase_admin._apps:
             firebase_admin.initialize_app(self.firebase_cred)
 
