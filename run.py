@@ -1,5 +1,5 @@
 from app import create_app
-from app.ia_agent import analisis_handler
+from app.ia_agent.analisis_handler import AnalisisHandler
 from app.data_collectors.CryptoPriceToMongo import CryptoPriceToMongo
 from app.data_collectors.EthereumToMongoSync import EthereumToMongoSync
 import threading
