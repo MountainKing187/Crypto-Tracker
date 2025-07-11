@@ -61,7 +61,8 @@ class GeminiAgent:
                 min_precio = min(min_precio, price)
                 max_precio = max(max_precio, price)
             
-            precio_promedio /= len(registros)
+            if (len(registros)!= 0):
+                precio_promedio /= len(registros)
             resumen_monedas = "\n".join(resumen_monedas)
             
             # Construir prompt para análisis conjunto

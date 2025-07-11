@@ -1,6 +1,7 @@
+import time
+from datetime import datetime
 from app.ia_agent.notification_service import NotificationService
 from app.ia_agent.gemini_agent import GeminiAgent
-import time
 
 class AnalisisHandler:
     def run(self, interval_seconds=3600):
