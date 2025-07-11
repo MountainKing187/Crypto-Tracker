@@ -8,6 +8,7 @@ def load_config():
         MONGODB_URI = os.getenv('MONGODB_URI')
         MONGO_DB_NAME = os.getenv('MONGO_DB_NAME', 'crypto_data')
         ALCHEMY_API_KEY = os.getenv('ALCHEMY_API_KEY')
+        GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
         SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'supersecretkey')
         
         @property
