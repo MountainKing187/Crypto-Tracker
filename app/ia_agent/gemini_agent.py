@@ -30,19 +30,16 @@ class GeminiAgent:
         
         # Calcular timestamp de hace una hora
         hora_actual = datetime.utcnow()
-        hace_una_hora = hora_actual - timedelta(hours=24)
+        hace_una_hora = hora_actual - timedelta(hours=2)
         
         try:
                         
             # Consultar registros de hace una hora
             query = {
-                "timestamp": {
-                    "$gte": hace_una_hora - timedelta(minutes=5),  # Margen de 5 minutos
-                    "$lte": hace_una_hora + timedelta(minutes=5)
-                }
+                "timestamp": {"gte": hace_una_hora)}
             }
 
-            registros = list(self.price_history.find(query))
+            registros = self.price_history.find(query)
 
             # Preparar datos para el prompt conjunto
             resumen_monedas = []
