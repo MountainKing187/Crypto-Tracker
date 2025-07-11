@@ -49,4 +49,100 @@ def price_data(symbol):
     except Exception as e:
         current_app.logger.error(f"Error en /api/price: {str(e)}")
         return jsonify({"error": "Database error"}), 500
+
+@app.route('/api/devices/register', methods=['POST'])
+    def register_device():
+        """
+        Registra un dispositivo para recibir notificaciones
+        ---
+        tags:
+          - Dispositivos
+        parameters:
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              required:
+                - token
+                - device_id
+              properties:
+                token:
+                  type: string
+                  description: Token FCM del dispositivo
+                device_id:
+                  type: string
+                  description: ID único del dispositivo físico
+                user_id:
+                  type: string
+                  description: ID del usuario (opcional)
+                platform:
+                  type: string
+                  description: Plataforma (android/ios)
+        responses:
+          201:
+            description: Dispositivo registrado
+          400:
+            description: Datos inválidos
+        """
+        data = request.get_json()
+        collection = mongo.get_collection('devices_collection')
+        
+        # Validación básica
+        if not data or 'token' not in data or 'device_id' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Se requieren token y device_id'
+            }), 400
+        
+        token = data['token']
+        device_id = data['device_id']
+        user_id = data.get('user_id')
+        platform = data.get('platform', 'android')
+        
+        # Buscar si ya existe el dispositivo
+        existing_device = collection.find_one({
+            'device_id': device_id
+        })
+        
+        try:
+            if existing_device:
+                # Actualizar token existente
+                result = collection.update_one(
+                    {'_id': existing_device['_id']},
+                    {'$set': {
+                        'token': token,
+                        'updated_at': datetime.utcnow(),
+                        'user_id': user_id,
+                        'platform': platform
+                    }}
+                )
+                operation = 'updated'
+            else:
+                # Crear nuevo registro
+                new_device = {
+                    'token': token,
+                    'device_id': device_id,
+                    'user_id': user_id,
+                    'platform': platform,
+                    'created_at': datetime.utcnow(),
+                    'updated_at': datetime.utcnow(),
+                    'active': True
+                }
+                result = collection.insert_one(new_device)
+                operation = 'created'
+            
+            return jsonify({
+                'status': 'success',
+                'message': f'Dispositivo {operation}',
+                'device_id': device_id
+            }), 201
+        
+        except Exception as e:
+            current_app.logger.error(f"Error registrando dispositivo: {str(e)}")
+            return jsonify({
+                'status': 'error',
+                'message': 'Error interno del servidor'
+            }), 500
+
                                                            
