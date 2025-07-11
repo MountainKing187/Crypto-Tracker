@@ -67,7 +67,7 @@ class GeminiAgent:
                 
                 # Construir prompt para análisis conjunto
                 prompt = f"""
-                Quiero que analises comparativamente los siguientes precios de criptomonedas registrados hace aproximadamente dos horas ({hace_dos_horas.strftime('%Y-%m-%d %H:%M')} UTC):
+                Quiero que analises comparativamente los siguientes precios de criptomonedas registrados hace aproximadamente dos horas ({hace_dos_horas.strftime('%Y-%m-%d %H:%M')} UTC teniendo en cuenta que la hora actual es ({hora_actual.strftime('%Y-%m-%d %H:%M')}):
 
                 {resumen_monedas}
 
