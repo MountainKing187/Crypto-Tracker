@@ -24,7 +24,7 @@ class GeminiAgent:
     def analizar_datos_gemini(self):
 
         # Configurar Gemini
-        genai.configure(self.config.GEMINI_API_KEY)
+        genai.configure(api_key= self.config.GEMINI_API_KEY)
         model = genai.GenerativeModel('gemini-2.5-flash')
         
         # Calcular timestamp de hace una hora
