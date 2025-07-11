@@ -40,4 +40,4 @@ def run_data_collectors():
 
 if __name__ == '__main__':
     run_data_collectors()
-    app.run(host='0.0.0.0', port=8081, use_reloader=False)
+    app.run(host='0.0.0.0', port=8081, use_reloader=False, debug=True)
