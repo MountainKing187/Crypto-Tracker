@@ -111,7 +111,7 @@ class GeminiAgent:
             }
             
             # Insertar en colección destino
-            destino_col.insert_one(documento_analisis)
+            self.aiprompt.insert_one(documento_analisis)
             print(f"Análisis conjunto guardado. Monedas analizadas: {len(simbolos)}")
             print(f"Documento ID: {documento_analisis.get('_id', '')}")
 
