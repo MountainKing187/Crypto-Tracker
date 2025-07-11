@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 from app.ia_agent.notification_service import NotificationService
 from app.ia_agent.gemini_agent import GeminiAgent
 
