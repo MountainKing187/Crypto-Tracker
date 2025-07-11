@@ -36,7 +36,7 @@ class GeminiAgent:
                         
             # Consultar registros de hace una hora
             query = {
-                "timestamp": {"gte": hace_una_hora}
+                "timestamp": {"$gte": hace_una_hora}
             }
 
             registros = list(self.price_history.find(query))
@@ -49,7 +49,6 @@ class GeminiAgent:
             max_precio = float('-inf')
             
             for registro in registros:
-                print(registro)
                 symbol = registro['symbol']
                 price = registro['price']
                 timestamp = registro['timestamp']['$date'] if '$date' in registro['timestamp'] else registro['timestamp']
