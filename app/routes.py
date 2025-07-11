@@ -50,7 +50,7 @@ def price_data(symbol):
         current_app.logger.error(f"Error en /api/price: {str(e)}")
         return jsonify({"error": "Database error"}), 500
 
-@app.route('/api/devices/register', methods=['POST'])
+@main_bp.route('/api/devices/register', methods=['POST'])
 def register_device():
     """
     Registra un dispositivo para recibir notificaciones
