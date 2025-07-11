@@ -1,4 +1,5 @@
-from app.ia_agent import NotificationService, GeminiAgent
+from app.ia_agent.notification_service import NotificationService
+from app.ia_agent.gemini_agent import GeminiAgent
 import time
 
 class AnalisisHandler:
