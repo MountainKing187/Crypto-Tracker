@@ -36,7 +36,7 @@ class GeminiAgent:
                         
             # Consultar registros de hace una hora
             query = {
-                "timestamp": {"gte": hace_una_hora)}
+                "timestamp": {"gte": hace_una_hora}
             }
 
             registros = self.price_history.find(query)
