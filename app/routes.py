@@ -53,9 +53,7 @@ def price_data(symbol):
 @main_bp.route('/api/aiprompt')
 def recent_blocks():
     collection = mongo.get_collection('aiprompt')
-    data = collection.find_one(
-        sort=[('fecha_analisis', DESCENDING)]
-    )
+    data = collection.find_one(sort=[('fecha_analisis', DESCENDING)])
     return json.loads(json_util.dumps(data))
 
 @main_bp.route('/api/devices/register', methods=['POST'])
