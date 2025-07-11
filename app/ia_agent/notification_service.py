@@ -33,7 +33,7 @@ class NotificationService:
             print(f"Error al obtener tokens: {str(e)}")
             return []
 
-    def send_notification_to_all(self, title, body):
+    def send_notification_to_all(title, body):
         """
         Envía una notificación a todos los dispositivos registrados
         
