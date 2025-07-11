@@ -50,6 +50,14 @@ def price_data(symbol):
         current_app.logger.error(f"Error en /api/price: {str(e)}")
         return jsonify({"error": "Database error"}), 500
 
+@main_bp.route('/api/aiprompt')
+def recent_blocks():
+    collection = mongo.get_collection('aiprompt')
+    data = collection.find_one(
+        sort=[('fecha_analisis', DESCENDING)]
+    )
+    return json.loads(json_util.dumps(data))
+
 @main_bp.route('/api/devices/register', methods=['POST'])
 def register_device():
     """
