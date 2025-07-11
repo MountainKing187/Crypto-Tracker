@@ -28,15 +28,15 @@ class GeminiAgent:
         genai.configure(api_key= self.config.GEMINI_API_KEY)
         model = genai.GenerativeModel('gemini-2.5-flash')
         
-        # Calcular timestamp de hace una hora
+        # Calcular timestamp de hace dos horas
         hora_actual = datetime.utcnow()
-        hace_una_hora = hora_actual - timedelta(hours=2)
+        hace_dos_horas = hora_actual - timedelta(hours=2)
         
         try:
                         
-            # Consultar registros de hace una hora
+            # Consultar registros de hace dos horas
             query = {
-                "timestamp": {"$gte": hace_una_hora}
+                "timestamp": {"$gte": hace_dos_horas}
             }
 
             registros = list(self.price_history.find(query))
@@ -67,17 +67,15 @@ class GeminiAgent:
                 
                 # Construir prompt para análisis conjunto
                 prompt = f"""
-                Analiza comparativamente los siguientes precios de criptomonedas registrados hace aproximadamente una hora ({hace_una_hora.strftime('%Y-%m-%d %H:%M')} UTC):
+                Quiero que analises comparativamente los siguientes precios de criptomonedas registrados hace aproximadamente dos horas ({hace_dos_horas.strftime('%Y-%m-%d %H:%M')} UTC):
 
                 {resumen_monedas}
 
                 Proporciona un análisis que incluya:
-                1. Tendencia general del mercado
+                1. Resumen de la Tendencia general del mercado 
                 2. Monedas con comportamiento destacado (mayores ganancias/pérdidas)
-                3. Correlaciones observables entre monedas
-                4. Eventos externos que podrían explicar el comportamiento
-                5. Perspectiva a corto plazo (próximas 24 horas)
-                6. Nivel de riesgo general del mercado (Bajo/Medio/Alto)
+                3. Perspectiva a corto plazo (próximas 24 horas)
+                4. Nivel de riesgo general del mercado (Bajo/Medio/Alto)
 
                 Contexto adicional:
                 - Precio promedio: ${precio_promedio:.2f}
@@ -93,7 +91,7 @@ class GeminiAgent:
                 documento_analisis = {
                     "fecha_analisis": datetime.utcnow(),
                     "rango_temporal": {
-                        "inicio": hace_una_hora
+                        "inicio": hace_dos_horas
                     },
                     "prompt_utilizado": prompt,
                     "analisis_gemini": analisis,
