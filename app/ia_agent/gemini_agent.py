@@ -41,6 +41,12 @@ class GeminiAgent:
 
             registros = list(self.price_history.find(query))
 
+            print(f"Registros encontrados: {len(registros)}")
+
+            if registros:
+                    print("Ejemplo de primer registro:")
+                    print(registros[0])
+
             # Preparar datos para el prompt conjunto
             resumen_monedas = []
             simbolos = set()
