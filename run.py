@@ -1,4 +1,5 @@
 from app import create_app
+from app.ia_agent import analisis_handler
 from app.data_collectors.CryptoPriceToMongo import CryptoPriceToMongo
 from app.data_collectors.EthereumToMongoSync import EthereumToMongoSync
 import threading
@@ -10,7 +11,8 @@ def run_data_collectors():
     
     # Instanciar ambos recolectores
     crypto_collector = CryptoPriceToMongo(symbols)
-    eth_sync = EthereumToMongoSync()  # Instancia creada aquí
+    eth_sync = EthereumToMongoSync()
+    
     
     # Iniciar recolectores en hilos separados
     crypto_thread = threading.Thread(
