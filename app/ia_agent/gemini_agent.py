@@ -57,7 +57,7 @@ class GeminiAgent:
             for registro in registros:
                 symbol = registro['symbol']
                 price = registro['price']
-                timestamp = registro['timestamp']['$date'] if '$date' in registro['timestamp'] else registro['timestamp']
+                timestamp = registro['timestamp']
                 
                 resumen_monedas.append(f"- {symbol.upper()}: ${price:.2f}")
                 simbolos.add(symbol)
@@ -97,8 +97,7 @@ class GeminiAgent:
                 documento_analisis = {
                     "fecha_analisis": datetime.utcnow(),
                     "rango_temporal": {
-                        "inicio": (hace_una_hora - timedelta(minutes=5)),
-                        "fin": (hace_una_hora + timedelta(minutes=5))
+                        "inicio": hace_una_hora
                     },
                     "prompt_utilizado": prompt,
                     "analisis_gemini": analisis,
