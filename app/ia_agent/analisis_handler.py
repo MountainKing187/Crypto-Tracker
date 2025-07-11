@@ -7,6 +7,7 @@ class AnalisisHandler:
         print(f"Iniciando analisis ...")
         servicioNotificacion = NotificationService()
         servicioNotificacion.send_notification_to_all("Actualizacion de analisis", "Se ha actualizado el analisis con IA")
-        GeminiAgent.analizar_datos_gemini()
+        AgenteIA = GeminiAgent()
+        AgenteIA.analizar_datos_gemini()
         time.sleep(interval_seconds)
          
