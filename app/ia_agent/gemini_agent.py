@@ -109,7 +109,7 @@ class GeminiAgent:
                 # Insertar en colección destino
                 self.aiprompt.insert_one(documento_analisis)
                 print(f"Análisis conjunto guardado. Monedas analizadas: {len(simbolos)}")
-                print(f"Documento ID: {documento_analisis.get('_id', '')}")
+                print(f"Hora actual: {hora_actual.strftime('%Y-%m-%d %H:%M')")
             else:
                 print("No hay nada que analizar")
 
