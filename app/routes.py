@@ -51,7 +51,7 @@ def price_data(symbol):
         return jsonify({"error": "Database error"}), 500
 
 @main_bp.route('/api/aiprompt')
-def recent_blocks():
+def latest_ai_prompt():
     collection = mongo.get_collection('aiprompt')
     data = collection.find_one(sort=[('fecha_analisis', DESCENDING)])
     return json.loads(json_util.dumps(data))
