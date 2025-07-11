@@ -9,7 +9,7 @@ class GeminiAgent:
         # Cargar configuración centralizada
         self.config = config_loader.load_config()
 
-        if not GEMINI_API_KEY:
+        if not self.config.GEMINI_API_KEY:
             raise ValueError("La API Key de Gemini no está configurada")
         
         # Inicializar MongoDB usando MongoHandler
