@@ -49,6 +49,7 @@ class GeminiAgent:
             max_precio = float('-inf')
             
             for registro in registros:
+                print(registro)
                 symbol = registro['symbol']
                 price = registro['price']
                 timestamp = registro['timestamp']['$date'] if '$date' in registro['timestamp'] else registro['timestamp']
@@ -61,56 +62,58 @@ class GeminiAgent:
             
             if (len(registros)!= 0):
                 precio_promedio /= len(registros)
-            resumen_monedas = "\n".join(resumen_monedas)
-            
-            # Construir prompt para análisis conjunto
-            prompt = f"""
-            Analiza comparativamente los siguientes precios de criptomonedas registrados hace aproximadamente una hora ({hace_una_hora.strftime('%Y-%m-%d %H:%M')} UTC):
+                resumen_monedas = "\n".join(resumen_monedas)
+                
+                # Construir prompt para análisis conjunto
+                prompt = f"""
+                Analiza comparativamente los siguientes precios de criptomonedas registrados hace aproximadamente una hora ({hace_una_hora.strftime('%Y-%m-%d %H:%M')} UTC):
 
-            {resumen_monedas}
+                {resumen_monedas}
 
-            Proporciona un análisis que incluya:
-            1. Tendencia general del mercado
-            2. Monedas con comportamiento destacado (mayores ganancias/pérdidas)
-            3. Correlaciones observables entre monedas
-            4. Eventos externos que podrían explicar el comportamiento
-            5. Perspectiva a corto plazo (próximas 24 horas)
-            6. Nivel de riesgo general del mercado (Bajo/Medio/Alto)
+                Proporciona un análisis que incluya:
+                1. Tendencia general del mercado
+                2. Monedas con comportamiento destacado (mayores ganancias/pérdidas)
+                3. Correlaciones observables entre monedas
+                4. Eventos externos que podrían explicar el comportamiento
+                5. Perspectiva a corto plazo (próximas 24 horas)
+                6. Nivel de riesgo general del mercado (Bajo/Medio/Alto)
 
-            Contexto adicional:
-            - Precio promedio: ${precio_promedio:.2f}
-            - Rango de precios: ${min_precio:.2f} - ${max_precio:.2f}
-            - Total de monedas analizadas: {len(registros)}
-            """
-            
-            # Enviar solicitud a Gemini
-            response = model.generate_content(prompt)
-            analisis = response.text.strip()
-            
-            # Crear documento para insertar
-            documento_analisis = {
-                "fecha_analisis": datetime.utcnow(),
-                "rango_temporal": {
-                    "inicio": (hace_una_hora - timedelta(minutes=5)),
-                    "fin": (hace_una_hora + timedelta(minutes=5))
-                },
-                "prompt_utilizado": prompt,
-                "analisis_gemini": analisis,
-                "monedas_analizadas": list(simbolos),
-                "total_monedas": len(registros),
-                "precio_promedio": precio_promedio,
-                "precio_minimo": min_precio,
-                "precio_maximo": max_precio,
-                "metadata": {
-                    "fuente": "CoinGecko",
-                    "tipo_analisis": "conjunto"
+                Contexto adicional:
+                - Precio promedio: ${precio_promedio:.2f}
+                - Rango de precios: ${min_precio:.2f} - ${max_precio:.2f}
+                - Total de monedas analizadas: {len(registros)}
+                """
+                
+                # Enviar solicitud a Gemini
+                response = model.generate_content(prompt)
+                analisis = response.text.strip()
+                
+                # Crear documento para insertar
+                documento_analisis = {
+                    "fecha_analisis": datetime.utcnow(),
+                    "rango_temporal": {
+                        "inicio": (hace_una_hora - timedelta(minutes=5)),
+                        "fin": (hace_una_hora + timedelta(minutes=5))
+                    },
+                    "prompt_utilizado": prompt,
+                    "analisis_gemini": analisis,
+                    "monedas_analizadas": list(simbolos),
+                    "total_monedas": len(registros),
+                    "precio_promedio": precio_promedio,
+                    "precio_minimo": min_precio,
+                    "precio_maximo": max_precio,
+                    "metadata": {
+                        "fuente": "CoinGecko",
+                        "tipo_analisis": "conjunto"
+                    }
                 }
-            }
-            
-            # Insertar en colección destino
-            self.aiprompt.insert_one(documento_analisis)
-            print(f"Análisis conjunto guardado. Monedas analizadas: {len(simbolos)}")
-            print(f"Documento ID: {documento_analisis.get('_id', '')}")
+                
+                # Insertar en colección destino
+                self.aiprompt.insert_one(documento_analisis)
+                print(f"Análisis conjunto guardado. Monedas analizadas: {len(simbolos)}")
+                print(f"Documento ID: {documento_analisis.get('_id', '')}")
+            else:
+                print("No hay nada que analizar")
 
         except Exception as e:
             print(f"Error: {e}")
