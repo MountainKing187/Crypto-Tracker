@@ -67,7 +67,7 @@ class GeminiAgent:
                 
                 # Construir prompt para análisis conjunto
                 prompt = f"""
-                Quiero que analises brevemente, en texto puro, bien estructurado y sin formatos especiales, los siguientes precios de criptomonedas registrados hace aproximadamente dos horas ({hace_dos_horas.strftime('%Y-%m-%d %H:%M')} UTC teniendo en cuenta que la hora actual es ({hora_actual.strftime('%Y-%m-%d %H:%M')}):
+                Quiero que analises brevemente, bien estructurado y la respuesta en formato de texto plano, sin markdown (sin *, *, o _), los títulos deben estar en mayúsculas o separados por líneas, los siguientes precios de criptomonedas registrados hace aproximadamente dos horas ({hace_dos_horas.strftime('%Y-%m-%d %H:%M')} UTC teniendo en cuenta que la hora actual es ({hora_actual.strftime('%Y-%m-%d %H:%M')}):
 
                 {resumen_monedas}
 
