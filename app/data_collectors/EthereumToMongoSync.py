@@ -81,7 +81,6 @@ class EthereumToMongoSync:
 
         while True:
             try:
-                print("Empezando recoleccion")
                 block_filter = self.w3.eth.filter('latest')
                 new_blocks = block_filter.get_new_entries()
 
