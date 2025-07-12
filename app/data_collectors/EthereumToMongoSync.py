@@ -78,11 +78,12 @@ class EthereumToMongoSync:
 
     def run(self):
         print("Escuchando nuevos bloques...")
-        block_filter = self.w3.eth.filter('latest')
 
         while True:
             try:
+                block_filter = self.w3.eth.filter('latest')
                 new_blocks = block_filter.get_new_entries()
+
                 for block_hash in new_blocks:
                     block = self.w3.eth.get_block(block_hash.hex())
                     self.save_block_and_transactions(block.number)
